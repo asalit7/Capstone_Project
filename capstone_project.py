@@ -13,11 +13,10 @@ default_col = ['Does not meet the credit policy. Status:Charged Off', ' Charged 
 acc_df[acc_df['loan_status'].isin(default_col)].describe().T
 
 rej_df[rej_df['grade'] == 'A'].describe().T
-default_col = ['Does not meet the credit policy. Status:Charged Off', ' Charged Off', 'Default']
 rej_df[rej_df['loan_status'].isin(default_col)].describe().T
 
 nan_check1 = acc_df.isna().mean()
-nan_check1 = nan_check1[nan_check1 != 0].sort_values()
+nan_check1 = nan_check1[nan_check1 > .9].sort_values()
 nan_check1
 
 nan_check2 = rej_df.isna().mean()
@@ -25,4 +24,12 @@ nan_check2 = nan_check2[nan_check2 > .9].sort_values()
 nan_check2
 
 acc_df = acc_df.drop(['desc','member_id'], axis=1, errors='ignore')
-acc_df = acc_df.drop(['desc','member_id'], axis=1, errors='ignore')
+rej_df = acc_df.drop(['desc','member_id'], axis=1, errors='ignore')
+
+acc_df['issue_d'] = pd.to_datetime(acc_df['issue_d'])
+acc_df[['issue_d']]
+
+acc_df['Year'] = pd.DatetimeIndex(acc_df['issue_d']).year
+acc_df[['Year']]
+
+acc_df.groupby(['funded_amnt','issue_d'])['funded_amnt'].agg(['mean'])
