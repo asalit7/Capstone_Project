@@ -32,4 +32,16 @@ acc_df[['issue_d']]
 acc_df['Year'] = pd.DatetimeIndex(acc_df['issue_d']).year
 acc_df[['Year']]
 
-acc_df.groupby(['funded_amnt','issue_d'])['funded_amnt'].agg(['mean'])
+#Do you observe different loan grade patterns in different years?
+acc_df.groupby(['Year',])['funded_amnt'].agg(['mean']).plot.line()
+
+#Do you observe different loan grade patterns for different loan purposes?
+acc_df.groupby(['purpose', 'grade'])['funded_amnt'].count().nlargest(10).plot.bar()
+
+acc_df.groupby(['Year', 'grade'])['funded_amnt'].agg(['count']).plot.line()
+acc_df.groupby(['Year', 'purpose'])['purpose'].agg(['count'])
+
+acc_df.groupby(['fico_range_low','funded_amnt'])['funded_amnt'].agg(['count','mean','std'])
+acc_df.groupby(['fico_range_high','funded_amnt'])['fico_range_high'].agg(['count','mean'])
+
+acc_df.groupby(['fico_range_high','funded_amnt'])['fico_range_high'].agg(['count','mean'])
