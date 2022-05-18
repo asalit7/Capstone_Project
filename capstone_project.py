@@ -58,6 +58,15 @@ plt.plot(fico_low)
 [[fico_low]]
 
 #showing the mean and std of fico range between purpose of loan 
-acc_df.groupby(['purpose'])['fico_range_high'].agg(['mean','std'])
+acc_df.groupby(['purpose'])['fico_range_high'].agg(['mean','std']).plot.line()
 #showing the mean and std of fund amount between purpose of loan 
 acc_df.groupby(['purpose'])['funded_amnt'].agg(['mean','std'])
+
+
+#showing the mean and std of fico range between grade of loan 
+acc_df.groupby(['grade'])['fico_range_high'].agg(['mean','std']).plot.line()
+#showing the mean and std of fund amount between grade of loan ***
+acc_df.groupby(['grade'])['funded_amnt'].agg(['mean','std']).plot.line()
+
+#looking at the interest rate average by grade
+acc_df.groupby(['grade'])['int_rate'].agg(['mean','std']).plot.line()
