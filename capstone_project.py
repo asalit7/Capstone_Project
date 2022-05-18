@@ -2,6 +2,8 @@
 import numpy as np
 import pandas as pd 
 import seaborn as sns
+import matplotlib.pyplot as plt
+
 
 f1 = pd.read_csv("accepted_2007_to_2018Q4.csv.gz", compression='gzip')
 f2 = pd.read_csv("rejected_2007_to_2018Q4.csv.gz", compression='gzip')
@@ -44,4 +46,5 @@ acc_df.groupby(['Year', 'purpose'])['purpose'].agg(['count'])
 acc_df.groupby(['fico_range_low','funded_amnt'])['funded_amnt'].agg(['count','mean','std'])
 acc_df.groupby(['fico_range_high','funded_amnt'])['fico_range_high'].agg(['count','mean'])
 
-acc_df.groupby(['fico_range_high','funded_amnt'])['fico_range_high'].agg(['count','mean'])
+fico_high = acc_df.groupby(['fico_range_high'])['fico_range_high'].agg(['count'])
+plt.po
