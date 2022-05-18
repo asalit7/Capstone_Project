@@ -24,13 +24,13 @@ nan_check1
 nan_check2 = rej_df.isna().mean()
 nan_check2 = nan_check2[nan_check2 > .9].sort_values()
 nan_check2
-
+#dropping na columns with all na values
 acc_df = acc_df.drop(['desc','member_id'], axis=1, errors='ignore')
 rej_df = acc_df.drop(['desc','member_id'], axis=1, errors='ignore')
-
+#setting date to datetime
 acc_df['issue_d'] = pd.to_datetime(acc_df['issue_d'])
 acc_df[['issue_d']]
-
+#creating a column with year
 acc_df['Year'] = pd.DatetimeIndex(acc_df['issue_d']).year
 acc_df[['Year']]
 
@@ -39,8 +39,9 @@ acc_df.groupby(['Year',])['funded_amnt'].agg(['mean']).plot.line()
 
 #Do you observe different loan grade patterns for different loan purposes?
 acc_df.groupby(['purpose', 'grade'])['funded_amnt'].count().nlargest(10).plot.bar()
-
+#looking at grade in terms of funded amount over the years
 acc_df.groupby(['Year', 'grade'])['funded_amnt'].agg(['count']).plot.line()
+#looking at purpose count over the years 
 acc_df.groupby(['Year', 'purpose'])['purpose'].agg(['count'])
 acc_df.groupby(['purpose'])['purpose'].size()
 
@@ -58,7 +59,7 @@ plt.plot(fico_low)
 [[fico_low]]
 
 #showing the mean and std of fico range between purpose of loan 
-acc_df.groupby(['purpose'])['fico_range_high'].agg(['mean','std']).plot.line()
+acc_df.groupby(['purpose'])['fico_range_high'].agg(['mean','std'])
 #showing the mean and std of fund amount between purpose of loan 
 acc_df.groupby(['purpose'])['funded_amnt'].agg(['mean','std'])
 
@@ -69,4 +70,24 @@ acc_df.groupby(['grade'])['fico_range_high'].agg(['mean','std']).plot.line()
 acc_df.groupby(['grade'])['funded_amnt'].agg(['mean','std']).plot.line()
 
 #looking at the interest rate average by grade
-acc_df.groupby(['grade'])['int_rate'].agg(['mean','std']).plot.line()
+acc_df.groupby(['grade','term'])['int_rate'].agg(['mean','std'])
+
+#biggest difference is A grade starts lower at 36 months and G starts higher than 60 months
+acc_df[acc_df['term'] == ' 60 months'].groupby(['grade'])['int_rate'].agg(['mean','std'])
+acc_df[acc_df['term'] == ' 36 months'].groupby(['grade'])['int_rate'].agg(['mean','std'])
+# create box plots for different grades ? 
+
+
+# looking at interest rate with payment over 60 months subgrades
+acc_df[acc_df['term'] == ' 60 months'].groupby(['sub_grade'])['int_rate'].agg(['mean','std'])
+# looking at interest rate with payment over 36 months subgrades
+#starts lower than 60 months  but lowest grade has similar prices
+acc_df[acc_df['term'] == ' 36 months'].groupby(['sub_grade'])['int_rate'].agg(['mean','std'])
+#mentions that misleading to compare two loans at same rate with different years 
+acc_df.groupby(['Year'])['int_rate'].agg(['mean','std']).plot.line()
+
+
+acc_df.groupby(['Year'])['dti'].agg(['mean','std'])
+
+for col in acc_df.columns:
+    print(col)
