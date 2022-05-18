@@ -42,9 +42,22 @@ acc_df.groupby(['purpose', 'grade'])['funded_amnt'].count().nlargest(10).plot.ba
 
 acc_df.groupby(['Year', 'grade'])['funded_amnt'].agg(['count']).plot.line()
 acc_df.groupby(['Year', 'purpose'])['purpose'].agg(['count'])
+acc_df.groupby(['purpose'])['purpose'].size()
+
+acc_df[acc_df['purpose'] == 'debt_consolidation'].groupby(['funded_amnt'])['Year'].agg(['count'])
 
 acc_df.groupby(['fico_range_low','funded_amnt'])['funded_amnt'].agg(['count','mean','std'])
 acc_df.groupby(['fico_range_high','funded_amnt'])['fico_range_high'].agg(['count','mean'])
 
 fico_high = acc_df.groupby(['fico_range_high'])['fico_range_high'].agg(['count'])
-plt.po
+plt.plot(fico_high)
+[[fico_high]]
+# NO difference ?
+fico_low = acc_df.groupby(['fico_range_low'])['funded_amnt'].agg(['count'])
+plt.plot(fico_low)
+[[fico_low]]
+
+#showing the mean and std of fico range between purpose of loan 
+acc_df.groupby(['purpose'])['fico_range_high'].agg(['mean','std'])
+#showing the mean and std of fund amount between purpose of loan 
+acc_df.groupby(['purpose'])['funded_amnt'].agg(['mean','std'])
