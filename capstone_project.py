@@ -145,3 +145,26 @@ acc_df.groupby(['Year','grade'])['profit'].agg(['mean']).reset_index().pivot(ind
 acc_df.groupby(['Year','grade'])['profit_perc'].agg(['count']).reset_index().pivot(index='Year',columns = 'grade', values = 'count').plot()
 acc_df.groupby(['Year','grade'])['profit_perc'].agg(['mean'])
 acc_df.groupby(['Year','grade'])['profit_perc'].agg(['count'])
+
+#creating variable for the average interest rate by grade
+grade_rate = acc_df.groupby(['grade'])['int_rate'].agg(['mean']).reset_index()
+
+#merging grade_rate to original dataset to have a mean for int_rates
+acc_df = pd.merge(acc_df,grade_rate,how='left',on=['grade'])
+acc_df = acc_df.rename(columns={'mean':'grade_rate_mean'})
+
+#graphing interest grade means with profit over the years
+acc_df[acc_df['loan_status'] != 'Current'].groupby(['Year','grade_rate_mean'])['profit'].agg(['mean']).reset_index().pivot(index='Year',columns = 'grade_rate_mean', values = 'mean').plot()
+acc_df[acc_df['loan_status'] != 'Current'].groupby(['Year','grade_rate_mean'])['profit'].agg(['count']).reset_index().pivot(index='Year',columns = 'grade_rate_mean', values = 'count').plot()
+acc_df.groupby(['Year','grade_rate_mean'])['profit'].agg(['count']).reset_index().pivot(index='Year',columns = 'grade_rate_mean', values = 'count').plot()
+
+#looking at initial graph of purpose with profit mean
+acc_df.groupby(['Year', 'purpose'])['profit'].agg(['mean']).reset_index().pivot(index='Year',columns = 'purpose', values = 'mean').plot()
+acc_df['grade_int']
+
+acc_df[acc_df['Year'].isin([2016.0,2017.0,2018.0])].groupby(['grade'])['profit'].agg(['mean'])
+acc_df['loan_status'].unique()
+
+acc_df[acc_df['loan_status'].isin(['Late (31-120 days)','Late (16-30 days)'])].groupby(['Year'])['profit'].agg(['mean']).plot.line()
+acc_df[acc_df['loan_status'].isin(['Fully Paid', 'Does not meet the credit policy. Status:Fully Paid'])].groupby(['Year'])['profit'].agg(['mean']).plot.line()
+
