@@ -33,6 +33,8 @@ acc_df[['issue_d']]
 #creating a column with year
 acc_df['Year'] = pd.DatetimeIndex(acc_df['issue_d']).year
 acc_df[['Year']]
+#creating a column with quarters
+acc_df['Quarter'] = (acc_df['issue_d']).dt.quarter
 
 #Do you observe different loan grade patterns in different years?
 acc_df.groupby(['Year',])['funded_amnt'].agg(['mean']).plot.line()
@@ -103,6 +105,9 @@ acc_df.groupby(['Year'])['dti'].agg(['mean','std'])
 for col in acc_df.columns:
     print(col)
 
+#cleaning up loan status 
+acc_df[acc_df['loan_status'] == ('Does not meet the credit policy. Status:Charged Off')] = 'Charged Off'
+acc_df[acc_df['loan_status'] == ('Does not meet the credit policy. Status:Fully Paid')] = 'Fully Paid'
 
 acc_df['loan_status'].unique()
 #looking at loan status of funded amount within grades of defaulted vs paid off or currently paying
@@ -112,6 +117,20 @@ acc_df.groupby('grade')['int_rate'].agg(['count'])
 acc_df[acc_df['loan_status'].isin(['Does not meet the credit policy. Status:Charged Off', 'Charged Off', 'Default'])].groupby('grade')['int_rate'].agg(['mean']).plot.line()
 acc_df[acc_df['loan_status'].isin(['Fully Paid', 'Current', 'Does not meet the credit policy. Status:Fully Paid'])].groupby('grade')['int_rate'].agg(['mean']).plot.line()
 
-acc_df[acc_df['loan_stat']]
+status_sum = acc_df.groupby('grade')['loan_status'].count().sum()
+def_grade_stat = acc_df[acc_df['loan_status'].isin(['Does not meet the credit policy. Status:Charged Off', 'Charged Off', 'Default'])].groupby('grade').size()
+def_grade_perc = (def_grade_stat/status_sum)*100
+def_grade_perc.plot.line()
 
-acc_df.groupby(['grade','delinq_2yrs'])[].count()
+paid_grade_stat = acc_df[acc_df['loan_status'].isin(['Fully Paid', 'Current', 'Does not meet the credit policy. Status:Fully Paid'])].groupby('grade').size()
+paid_grade_perc = (paid_grade_stat/status_sum)*100
+paid_grade_perc.plot.line()
+
+total_stat = (acc_df.groupby('grade')['loan_status'].count()/status_sum)*100
+total_stat.plot.line()
+
+acc_df[acc_df['loan_status'].isin(['Charged Off',''])].value_counts(normalize=True, dropna=False)
+
+acc_df[['funded_amnt_inv']]
+
+plot_var
