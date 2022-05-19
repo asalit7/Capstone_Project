@@ -29,16 +29,14 @@ acc_df = acc_df.drop(['desc','member_id'], axis=1, errors='ignore')
 rej_df = acc_df.drop(['desc','member_id'], axis=1, errors='ignore')
 #setting date to datetime
 acc_df['issue_d'] = pd.to_datetime(acc_df['issue_d'])
-acc_df[['issue_d']]
 #creating a column with year
 acc_df['Year'] = pd.DatetimeIndex(acc_df['issue_d']).year
-acc_df[['Year']]
 #creating a column with quarters
 acc_df['Quarter'] = (acc_df['issue_d']).dt.quarter
 
 #Do you observe different loan grade patterns in different years?
 acc_df.groupby(['Year',])['funded_amnt'].agg(['mean']).plot.line()
-#amt of money for specific grades in purpose ?
+#amt of money for specific grades in purpose ? ------------------------------------------------------
 
 
 #Do you observe different loan grade patterns for different loan purposes?
@@ -117,20 +115,33 @@ acc_df.groupby('grade')['int_rate'].agg(['count'])
 acc_df[acc_df['loan_status'].isin(['Does not meet the credit policy. Status:Charged Off', 'Charged Off', 'Default'])].groupby('grade')['int_rate'].agg(['mean']).plot.line()
 acc_df[acc_df['loan_status'].isin(['Fully Paid', 'Current', 'Does not meet the credit policy. Status:Fully Paid'])].groupby('grade')['int_rate'].agg(['mean']).plot.line()
 
+#creating variables of defaulted loans
 status_sum = acc_df.groupby('grade')['loan_status'].count().sum()
 def_grade_stat = acc_df[acc_df['loan_status'].isin(['Does not meet the credit policy. Status:Charged Off', 'Charged Off', 'Default'])].groupby('grade').size()
+#calculating percentages and graphing defaulted loans
 def_grade_perc = (def_grade_stat/status_sum)*100
 def_grade_perc.plot.line()
 
+#creating variables of paid loans
 paid_grade_stat = acc_df[acc_df['loan_status'].isin(['Fully Paid', 'Current', 'Does not meet the credit policy. Status:Fully Paid'])].groupby('grade').size()
+#calculated percentage of paid loans and graphed it
 paid_grade_perc = (paid_grade_stat/status_sum)*100
 paid_grade_perc.plot.line()
-
+#looking at total loan status percentages by grade
 total_stat = (acc_df.groupby('grade')['loan_status'].count()/status_sum)*100
 total_stat.plot.line()
 
-acc_df[acc_df['loan_status'].isin(['Charged Off',''])].value_counts(normalize=True, dropna=False)
+acc_df[['total_pymnt']]
+acc_df[['funded_amnt']]
+#creating a variable for profit of each row 
+acc_df.groupby('grade')['total_pymnt'].agg(['mean'])
+acc_df['profit'] = acc_df['total_pymnt'] - acc_df['funded_amnt']
+acc_df['profit_perc'] = (acc_df['total_pymnt'] - acc_df['funded_amnt'])/acc_df['funded_amnt']
+#graphing the profit by Year and grade
+acc_df.groupby(['Year','grade'])['profit'].agg(['mean']).reset_index().pivot(index='Year',columns = 'grade', values = 'mean').plot()
 
-acc_df[['funded_amnt_inv']]
-
-plot_var
+#graphing by profit for each year and grade
+acc_df.groupby(['Year','grade'])['profit'].agg(['mean']).reset_index().pivot(index='Year',columns = 'grade', values = 'mean').plot()
+acc_df.groupby(['Year','grade'])['profit_perc'].agg(['count']).reset_index().pivot(index='Year',columns = 'grade', values = 'count').plot()
+acc_df.groupby(['Year','grade'])['profit_perc'].agg(['mean'])
+acc_df.groupby(['Year','grade'])['profit_perc'].agg(['count'])
