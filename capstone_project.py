@@ -77,20 +77,23 @@ acc_df.groupby(['grade'])['funded_amnt'].agg(['mean']).plot.line()
 #looking at the interest rate average by grade
 acc_df.groupby(['grade','term'])['int_rate'].agg(['mean','std'])
 
-acc_df.groupby(['Year','grade'])['int_rate'].agg(['mean']).reset_index().pivot(index='Year',columns = 'grade', values = 'mean').plot()
-
 
 #biggest difference is A grade starts lower at 36 months and G starts higher than 60 months
 acc_df[acc_df['term'] == ' 60 months'].groupby(['grade'])['int_rate'].agg(['mean','std'])
 acc_df[acc_df['term'] == ' 36 months'].groupby(['grade'])['int_rate'].agg(['mean','std'])
 # create box plots for different grades ? 
 
+#pivoting a table looking at how int rate has changed over the years with grade
+acc_df.groupby(['Year','grade'])['int_rate'].agg(['mean']).reset_index().pivot(index='Year',columns = 'grade', values = 'mean').plot()
 
 # looking at interest rate with payment over 60 months subgrades
-acc_df[acc_df['term'] == ' 60 months'].groupby(['sub_grade'])['int_rate'].agg(['mean','std'])
+acc_df[acc_df['term'] == ' 60 months'].groupby(['Year','grade'])['int_rate'].agg(['mean']).reset_index().pivot(index='Year',columns = 'grade', values = 'mean').plot()
 # looking at interest rate with payment over 36 months subgrades
 #starts lower than 60 months  but lowest grade has similar prices
-acc_df[acc_df['term'] == ' 36 months'].groupby(['sub_grade'])['int_rate'].agg(['mean','std'])
+acc_df[acc_df['term'] == ' 36 months'].groupby(['Year','grade'])['int_rate'].agg(['mean']).reset_index().pivot(index='Year',columns = 'grade', values = 'mean').plot()
+
+#term doesnt affect the int rate average over the years too much
+
 #mentions that misleading to compare two loans at same rate with different years 
 acc_df.groupby(['Year'])['int_rate'].agg(['mean']).plot.line()
 
@@ -103,10 +106,12 @@ for col in acc_df.columns:
 
 acc_df['loan_status'].unique()
 #looking at loan status of funded amount within grades of defaulted vs paid off or currently paying
-acc_df[acc_df['loan_status'].isin(['Does not meet the credit policy. Status:Charged Off', 'Charged Off', 'Default'])].groupby('grade')['funded_amnt'].agg(['mean']).plot.line()
-acc_df[acc_df['loan_status'].isin(['Fully Paid', 'Current', 'Does not meet the credit policy. Status:Fully Paid'])].groupby('grade','loan_status')['funded_amnt'].agg(['mean']).plot.line()
-
+acc_df[acc_df['loan_status'].isin(['Does not meet the credit policy. Status:Charged Off', 'Charged Off', 'Default'])].groupby('grade')['int_rate'].agg(['count'])
+acc_df[acc_df['loan_status'].isin(['Fully Paid', 'Current', 'Does not meet the credit policy. Status:Fully Paid'])].groupby('grade')['int_rate'].agg(['count'])
+acc_df.groupby('grade')['int_rate'].agg(['count'])
 acc_df[acc_df['loan_status'].isin(['Does not meet the credit policy. Status:Charged Off', 'Charged Off', 'Default'])].groupby('grade')['int_rate'].agg(['mean']).plot.line()
 acc_df[acc_df['loan_status'].isin(['Fully Paid', 'Current', 'Does not meet the credit policy. Status:Fully Paid'])].groupby('grade')['int_rate'].agg(['mean']).plot.line()
 
 acc_df[acc_df['loan_stat']]
+
+acc_df.groupby(['grade','delinq_2yrs'])[].count()
