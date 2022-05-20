@@ -18,7 +18,6 @@ nan_check1
 
 #dropping na columns with all na values
 acc_df = acc_df.drop(['desc','member_id'], axis=1, errors='ignore')
-rej_df = acc_df.drop(['desc','member_id'], axis=1, errors='ignore')
 #setting date to datetime
 acc_df['issue_d'] = pd.to_datetime(acc_df['issue_d'])
 #creating a column with year
@@ -33,7 +32,6 @@ acc_df['profit'] = acc_df['total_pymnt'] - acc_df['funded_amnt']
 
 #creating fico range into one variable
 acc_df['fico_range'] = (acc_df['fico_range_high'] + acc_df['fico_range_low'])/2
-acc_df['fico_range']
 
 #creating a mask of the dataframe without the current loans
 loan_mask = acc_df[acc_df['loan_status'] != 'Current']
@@ -57,8 +55,17 @@ acc_df.groupby(['purpose'])['funded_amnt'].agg(['count'])
 non_current_mask = acc_df[acc_df['loan_status'] != 'Current']
 sns.boxplot(data=non_current_mask,x='grade', y='int_rate', order=['A','B','C','D','E','F','G']).set(xlabel = 'Grade', ylabel='Interest Rate', title='Interest Rates by Grade')
 
+yr_gr_funds = acc_df.loc[acc_df['loan_status'] != 'Current'].groupby(['Year','grade'])['funded_amnt'].agg(['mean']).reset_index().pivot(index='Year',columns = 'grade', values = 'mean')
+yr_gr_funds.plot.line(xlabel = 'Year',ylabel='Funded Amount', title = 'Grade Average Funded Amounts Change Over Years')
+
 #looking at grade in terms of funded amount over the years, use pivot wider
 acc_df.groupby(['Year', 'grade'])['funded_amnt'].agg(['count']).reset_index().pivot(index='Year',columns = 'grade', values = 'count').plot()
+
+#creating a count plot for the amount of grades 
+sns.countplot(data = acc_df, x='grade',order=['A','B','C','D','E','F','G']).set(xlabel ="Grade", ylabel = "Count",title='Count of Each Grade')
+
+#creating grade box plots by fico score
+sns.boxplot(data=acc_df,x='grade', y='fico_range', order=['A','B','C','D','E','F','G']).set(xlabel = 'Grade', ylabel='Fico Score', title='Fico Score by Grade')
 
 #looking at the interest rate average by grade
 acc_df.groupby(['grade','term'])['int_rate'].agg(['mean'])
@@ -71,7 +78,6 @@ acc_df[acc_df['term'] == ' 36 months'].groupby(['grade'])['int_rate'].agg(['mean
 acc_df.groupby('grade')['fico_range'].agg(['mean'])
 #bar plot of average funds 
 sns.lineplot(data=loan_mask,x='grade',y='funded_amnt')
-
 #looking at loan status of funded amount within grades of defaulted vs paid off or currently paying
 defaulted_bar = acc_df[acc_df['loan_status'].isin(['Does not meet the credit policy. Status:Charged Off', 'Charged Off', 'Default'])].groupby('grade')['int_rate'].agg(['count'])
 defaulted_bar.plot.bar(xlabel="Grade",ylabel="Count",title='Count of Defaulted Borrowers')
@@ -86,12 +92,13 @@ sns.countplot(data=acc_df, y='purpose').set(xlabel ="Count", ylabel = "Purpose o
 #creating a separate dataframing looking at the highest count purpose rows
 purpose_mask = acc_df.loc[acc_df['purpose'].isin(['credit_card','debt_consolidation','home_improvement','other'])]
 # looking into profit over the years
-purpose_mask[purpose_mask['loan_status'] != 'Current'].groupby(['Year', 'purpose'])['profit'].agg(['mean']).reset_index().pivot(index='Year',columns = 'purpose', values = 'mean').plot()
+purpose_profit = purpose_mask[purpose_mask['loan_status'] != 'Current'].groupby(['Year', 'purpose'])['profit'].agg(['mean']).reset_index().pivot(index='Year',columns = 'purpose', values = 'mean')
+purpose_profit.plot.line(xlabel='Year', ylabel= 'Average Profit', title = 'Average Profit Amount by Purpose')
 # looking into purpose of funding amnts of the years
-purpose_mask[purpose_mask['loan_status'] != 'Current'].groupby(['Year', 'purpose'])['funded_amnt'].agg(['mean']).reset_index().pivot(index='Year',columns = 'purpose', values = 'mean').plot()
+purpose_fund = purpose_mask[purpose_mask['loan_status'] != 'Current'].groupby(['Year', 'purpose'])['funded_amnt'].agg(['mean']).reset_index().pivot(index='Year',columns = 'purpose', values = 'mean')
+purpose_fund.plot.line(xlabel='Year', ylabel= 'Average Loan Fund Amount', title = 'Average Loan Fund Amount by Purpose')
 # looking into the grades in respect to purpose of profits
 purpose_mask[purpose_mask['loan_status'] != 'Current'].groupby(['grade', 'purpose'])['profit'].agg(['mean']).reset_index().pivot(index='grade',columns = 'purpose', values = 'mean').plot()
-
 
 # Years----------------
 
@@ -106,9 +113,8 @@ yr_gr_profit = acc_df.loc[acc_df['loan_status'] != 'Current'].groupby(['Year','g
 yr_gr_profit.plot.line(xlabel = 'Year',ylabel='Profit', title = 'Grade Profits Change Over Years')
 
 #looking at profit in terms of different terms
-acc_df[acc_df['loan_status'] != 'Current'].groupby(['Year','term'])['profit'].agg(['mean']).reset_index().pivot(index='Year',columns = 'term', values = 'mean').plot()
-
-#default vs non default count ---
+term_profit = acc_df[acc_df['loan_status'] != 'Current'].groupby(['Year','term'])['profit'].agg(['mean']).reset_index().pivot(index='Year',columns = 'term', values = 'mean')
+term_profit.plot.line(xlabel = 'Year',ylabel='Profit', title = 'Term Profits Change Over Years')
 
 #looking at loan status of funded amount within grades of defaulted vs paid off or currently paying
 defaulted_bar = acc_df[acc_df['loan_status'].isin(['Does not meet the credit policy. Status:Charged Off', 'Charged Off', 'Default'])].groupby('grade')['int_rate'].agg(['count'])
@@ -116,7 +122,7 @@ defaulted_bar.plot.bar(xlabel="Grade",ylabel="Count",title='Count of Defaulted B
 
 #showing a bar graph of non_defaulted borrowers count
 non_defaulted_bar = acc_df[acc_df['loan_status'].isin(['Fully Paid', 'Does not meet the credit policy. Status:Fully Paid'])].groupby('grade')['int_rate'].agg(['count'])
-non_defaulted_bar.plot.bar(xlabel="Grade",ylabel="Count",title='Count of Non-Defaulted Borrowers')
+non_defaulted_bar.plot.bar(xlabel="Grade",ylabel="Count",title='Count of Fully Paid Borrowers')
 
 defaulted_profit = acc_df[acc_df['loan_status'].isin(['Does not meet the credit policy. Status:Charged Off', 'Charged Off', 'Default'])].groupby('Year')['profit'].agg(['mean'])
 defaulted_profit.plot.line(xlabel="Year",ylabel="Profit",title='Profit of Defaulted Borrowers Over the Years')
@@ -131,7 +137,3 @@ acc_df[acc_df['loan_status'].isin(['Late (31-120 days)','Late (16-30 days)'])].g
 acc_df[acc_df['loan_status'].isin(['Fully Paid', 'Does not meet the credit policy. Status:Fully Paid'])].groupby(['Year'])['profit'].agg(['mean']).plot.line()
 
 
-#looking into profit by grade over the years of loans that are not currently paying back
-acc_df[acc_df['loan_status'].isin(['Default','Charged Off','Fully Paid'])].groupby(['Year','grade'])['profit'].agg(['mean']).reset_index().pivot(index='Year',columns = 'grade', values = 'mean').plot()
-
-acc_df[acc_df['loan_status'] != 'Current'].groupby(['Year','grade'])['profit'].agg(['mean']).reset_index().pivot(index='Year',columns = 'grade', values = 'mean').plot()
