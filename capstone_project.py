@@ -31,27 +31,28 @@ rej_df = acc_df.drop(['desc','member_id'], axis=1, errors='ignore')
 acc_df['issue_d'] = pd.to_datetime(acc_df['issue_d'])
 #creating a column with year
 acc_df['Year'] = pd.DatetimeIndex(acc_df['issue_d']).year
-#creating a column with quarters
-acc_df['Quarter'] = (acc_df['issue_d']).dt.quarter
 
 #cleaning up loan status 
 acc_df.loc[acc_df['loan_status'] == ('Does not meet the credit policy. Status:Charged Off'), 'loan_status'] = 'Charged Off'
 acc_df.loc[acc_df['loan_status'] == ('Does not meet the credit policy. Status:Fully Paid'),'loan_status'] = 'Fully Paid'
 
-#Do you observe different loan grade patterns in different years?
-acc_df.groupby(['Year',])['funded_amnt'].agg(['mean']).plot.line()
+#graphing funded amount over the years
+acc_df.groupby(['Year'])['funded_amnt'].agg(['mean']).plot.line()
+avg_fnd = sns.lineplot(data = acc_df, x='Year', y='funded_amnt', estimator=np.mean).set(xlabel ="Year", ylabel ="Funded Amount")
 #amt of money for specific grades in purpose ? ------------------------------------------------------
-
+#looking purpose counts over the years
+acc_df.groupby(['Year','purpose'])['funded_amnt'].agg(['count']).reset_index().pivot(index='Year',columns = 'purpose', values = 'count').plot()
 
 #Do you observe different loan grade patterns for different loan purposes?
 acc_df.groupby(['purpose', 'grade'])['funded_amnt'].count().nlargest(10).plot.bar()
+acc_df.groupby(['purpose'])['funded_amnt'].count().nlargest(10).plot.bar()
+#looking purpose counts over the years
+acc_df.groupby(['Year','purpose'])['funded_amnt'].agg(['count']).reset_index().pivot(index='Year',columns = 'purpose', values = 'count').plot()
+
 #looking at grade in terms of funded amount over the years, use pivot wider
 acc_df.groupby(['Year', 'grade'])['funded_amnt'].agg(['count']).reset_index().pivot(index='Year',columns = 'grade', values = 'count').plot()
-#looking at purpose count over the years 
-acc_df.groupby(['Year', 'purpose'])['purpose'].agg(['count'])
+#looking at purpose count size
 acc_df.groupby(['purpose'])['purpose'].size()
-
-acc_df[acc_df['purpose'] == 'debt_consolidation'].groupby(['funded_amnt'])['Year'].agg(['count'])
 
 #fico range grouped low to high
 acc_df.groupby(['Year','fico_range_low','fico_range_high'])['funded_amnt'].agg(['mean']).reset_index()
