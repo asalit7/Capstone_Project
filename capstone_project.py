@@ -41,13 +41,6 @@ curr_loan_mask = acc_df[acc_df['loan_status'] == 'Current']
 #graphing funded amount over the years
 acc_df.groupby(['Year'])['funded_amnt'].agg(['mean']).plot.line()
 avg_fnd = sns.lineplot(data = acc_df, x='Year', y='funded_amnt', estimator=np.mean).set(xlabel ="Year", ylabel ="Funded Amount", title="Loan Funded Amount Over the Years")
-sns.lineplot(data = acc_df, x='Year', y='profit', estimator=np.mean).set(xlabel ="Year", ylabel ="Profit", title="Loan Profit Amount Over the Years")
-
-#amt of money for specific grades in purpose ? ------------------------------------------------------
-#looking purpose counts over the years
-acc_df.groupby(['Year','purpose'])['funded_amnt'].agg(['count']).reset_index().pivot(index='Year',columns = 'purpose', values = 'count').plot()
-
-acc_df.groupby(['purpose'])['funded_amnt'].agg(['count'])
 
 #-------------- Grade graphs and information
 
@@ -123,9 +116,6 @@ defaulted_bar.plot.bar(xlabel="Grade",ylabel="Count",title='Count of Defaulted B
 #showing a bar graph of non_defaulted borrowers count
 non_defaulted_bar = acc_df[acc_df['loan_status'].isin(['Fully Paid', 'Does not meet the credit policy. Status:Fully Paid'])].groupby('grade')['int_rate'].agg(['count'])
 non_defaulted_bar.plot.bar(xlabel="Grade",ylabel="Count",title='Count of Fully Paid Borrowers')
-
-defaulted_profit = acc_df[acc_df['loan_status'].isin(['Does not meet the credit policy. Status:Charged Off', 'Charged Off', 'Default'])].groupby('Year')['profit'].agg(['mean'])
-defaulted_profit.plot.line(xlabel="Year",ylabel="Profit",title='Profit of Defaulted Borrowers Over the Years')
 
 #creating a variable for profit of each row 
 acc_df.groupby('grade')['total_pymnt'].agg(['mean'])
