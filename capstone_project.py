@@ -44,29 +44,42 @@ acc_df.groupby(['Year','purpose'])['funded_amnt'].agg(['count']).reset_index().p
 
 acc_df.groupby(['purpose'])['funded_amnt'].agg(['count'])
 
+#-------------- Grade graphs and information
 
-#looking at the most used reason for loans over the years
-acc_df.groupby(['Year','purpose'])['funded_amnt'].count().nlargest(15).plot.barh()
-#Do you observe different loan grade patterns for different loan purposes?
-acc_df.groupby(['purpose', 'grade'])['funded_amnt'].count().nlargest(10).plot.bar()
-acc_df.groupby(['purpose'])['funded_amnt'].count().nlargest(10).plot.bar()
-#looking purpose counts over the years
-acc_df.groupby(['Year','purpose'])['funded_amnt'].agg(['count']).reset_index().pivot(index='Year',columns = 'purpose', values = 'count').plot()
+#create interest rates with grade box plots
+non_current_mask = acc_df[acc_df['loan_status'] != 'Current']
+sns.boxplot(data=non_current_mask,x='grade', y='int_rate', order=['A','B','C','D','E','F','G']).set(xlabel = 'Grade', ylabel='Interest Rate', title='Interest Rates by Grade')
 
 #looking at grade in terms of funded amount over the years, use pivot wider
 acc_df.groupby(['Year', 'grade'])['funded_amnt'].agg(['count']).reset_index().pivot(index='Year',columns = 'grade', values = 'count').plot()
-#looking at purpose count size
-acc_df.groupby(['purpose'])['purpose'].size()
-#highest are debt_consolidation, credit_card,
+
+#looking at the interest rate average by grade
+acc_df.groupby(['grade','term'])['int_rate'].agg(['mean'])
+
+#biggest difference is A grade starts lower at 36 months and G starts higher than 60 months
+acc_df[acc_df['term'] == ' 60 months'].groupby(['grade'])['int_rate'].agg(['mean','std'])
+acc_df[acc_df['term'] == ' 36 months'].groupby(['grade'])['int_rate'].agg(['mean','std'])
+
+#showing grade by interest rate
+non_current_mask.groupby('grade')['int_rate'].mean()
+
+
+
+
+
+
+
+#looking purpose counts over the years
+acc_df.groupby(['Year','purpose'])['funded_amnt'].agg(['count']).reset_index().pivot(index='Year',columns = 'purpose', values = 'count').plot()
 
 #fico range grouped low to high
-acc_df.groupby(['Year','fico_range_low','fico_range_high'])['funded_amnt'].agg(['mean']).reset_index()
+acc_df.groupby(['Year','fico_range_low','fico_range_high'])['funded_amnt'].agg(['mean'])
 
 fico_high = acc_df.groupby(['fico_range_high'])['fico_range_high'].agg(['count'])
 plt.plot(fico_high)
 
 fico_low = acc_df.groupby(['fico_range_low'])['funded_amnt'].agg(['count'])
-grade_check = acc_df.groupby(['Year','grade'])['t_amnt']
+
 plt.plot(fico_low)
 
 #showing the mean and std of fico range between purpose of loan 
@@ -74,19 +87,6 @@ acc_df.groupby(['purpose'])['fico_range_high'].agg(['mean','std'])
 #showing the mean and std of fund amount between purpose of loan 
 acc_df.groupby(['purpose'])['funded_amnt'].agg(['mean','std'])
 
-
-#showing the mean of fico range between grade of loan 
-acc_df.groupby(['grade'])['fico_range_high'].agg(['mean']).plot.line()
-#showing the mean and std of fund amount between grade of loan ***
-acc_df.groupby(['grade'])['funded_amnt'].agg(['mean']).plot.line()
-
-#looking at the interest rate average by grade
-acc_df.groupby(['grade','term'])['int_rate'].agg(['mean'])
-
-
-#biggest difference is A grade starts lower at 36 months and G starts higher than 60 months
-acc_df[acc_df['term'] == ' 60 months'].groupby(['grade'])['int_rate'].agg(['mean','std'])
-acc_df[acc_df['term'] == ' 36 months'].groupby(['grade'])['int_rate'].agg(['mean','std']).plot.line()
 # create box plots for different grades ? 
 
 #pivoting a table looking at how int rate has changed over the years with grade
@@ -103,7 +103,6 @@ acc_df[acc_df['term'] == ' 36 months'].groupby(['Year','grade'])['int_rate'].agg
 #mentions that misleading to compare two loans at same rate with different years 
 acc_df.groupby(['Year'])['int_rate'].agg(['mean']).plot.line()
 
-
 acc_df.groupby(['Year'])['dti'].agg(['mean','std'])
 
 for col in acc_df.columns:
@@ -118,21 +117,6 @@ defaulted_bar.plot.bar(xlabel="Grade",ylabel="Count",title='Count of Defaulted B
 non_defaulted_bar = acc_df[acc_df['loan_status'].isin(['Fully Paid', 'Does not meet the credit policy. Status:Fully Paid'])].groupby('grade')['int_rate'].agg(['count'])
 non_defaulted_bar.plot.bar(xlabel="Grade",ylabel="Count",title='Count of Non-Defaulted Borrowers')
 
-#create interest rates with grade box plots
-non_current_mask = acc_df[acc_df['loan_status'] != 'Current']
-sns.boxplot(data=non_current_mask,x='grade', y='int_rate')
-
-non_current_mask.groupby('grade')['int_rate'].mean()
-
-acc_df[acc_df['loan_status'].isin(['Does not meet the credit policy. Status:Charged Off', 'Charged Off', 'Default'])].groupby('grade')['int_rate'].agg(['mean']).plot.line()
-acc_df[acc_df['loan_status'].isin(['Fully Paid', 'Current', 'Does not meet the credit policy. Status:Fully Paid'])].groupby('grade')['int_rate'].agg(['mean']).plot.line()
-
-#creating variables of defaulted loans
-status_sum = acc_df.groupby('grade')['loan_status'].count().sum()
-def_grade_stat = acc_df[acc_df['loan_status'].isin(['Does not meet the credit policy. Status:Charged Off', 'Charged Off', 'Default'])].groupby('grade').size()
-#calculating percentages and graphing defaulted loans
-def_grade_perc = (def_grade_stat/status_sum)*100
-def_grade_perc.plot.line()
 
 #creating variables of paid loans
 paid_grade_stat = acc_df[acc_df['loan_status'].isin(['Fully Paid', 'Current', 'Does not meet the credit policy. Status:Fully Paid'])].groupby('grade').size()
@@ -168,7 +152,6 @@ acc_df.groupby(['Year','grade_rate_mean'])['profit'].agg(['count']).reset_index(
 #looking at initial graph of purpose with profit mean
 acc_df.groupby(['Year', 'purpose'])['profit'].agg(['mean']).reset_index().pivot(index='Year',columns = 'purpose', values = 'mean').plot()
 
-acc_df[acc_df['Year'].isin([2016.0,2017.0,2018.0])].groupby(['grade'])['profit'].agg(['mean'])
 #looking at values in different loan status's
 acc_df[acc_df['loan_status'].isin(['Late (31-120 days)','Late (16-30 days)'])].groupby(['Year'])['profit'].agg(['mean']).plot.line()
 acc_df[acc_df['loan_status'].isin(['Fully Paid', 'Does not meet the credit policy. Status:Fully Paid'])].groupby(['Year'])['profit'].agg(['mean']).plot.line()
@@ -182,6 +165,9 @@ acc_df[acc_df['loan_status'].isin(['Default','Charged Off','Fully Paid'])].group
 
 #creating a mask of the dataframe without the current loans
 loan_mask = acc_df[acc_df['loan_status'] != 'Current']
+
+curr_loan_mask = acc_df[acc_df['loan_status'] == 'Current']
+sns.lineplot(data=curr_loan_mask, x='Year',y='funded_amnt')
 #count plot of the count of purpose loans
 sns.countplot(data=acc_df, y='purpose').set(xlabel ="Count", ylabel = "Purpose of Loan",title='Purpose of Loan Count')
 #bar plot of average funds 
@@ -190,3 +176,12 @@ sns.lineplot(data=loan_mask,x='grade',y='funded_amnt')
 acc_df[acc_df['loan_status'] != 'Current'].groupby(['Year','grade'])['profit'].agg(['mean']).reset_index().pivot(index='Year',columns = 'grade', values = 'mean').plot()
 
 sns.lineplot(data=loan_mask,x='fico_range_low',y='profit')
+
+purpose_mask = acc_df.loc[acc_df['purpose'].isin(['credit_card','debt_consolidation','home_improvement','other'])]
+purpose_mask
+sns.barplot(data=purpose_mask, x='purpose',y='profit')
+purpose_mask[purpose_mask['loan_status'] != 'Current'].groupby(['Year', 'purpose'])['profit'].agg(['mean']).reset_index().pivot(index='Year',columns = 'purpose', values = 'mean').plot()
+purpose_mask[purpose_mask['loan_status'] != 'Current'].groupby(['Year', 'purpose'])['funded_amnt'].agg(['mean']).reset_index().pivot(index='Year',columns = 'purpose', values = 'mean').plot()
+purpose_mask[purpose_mask['loan_status'] != 'Current'].groupby(['grade', 'purpose'])['profit'].agg(['mean']).reset_index().pivot(index='grade',columns = 'purpose', values = 'mean').plot()
+
+purpose_mask['loan_status'].unique()
