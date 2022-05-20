@@ -12,17 +12,12 @@ f1.shape
 acc_df = f1.sample(n = 100000)
 
 print(acc_df.head().T)
-#acc_df[acc_df['grade'] == 'A'].describe().T
-#acc_df[acc_df['loan_status'].isin(default_col)].describe().T
 
-
+#checking the amount of na values present in columns and sorting it from desc
 nan_check1 = acc_df.isna().mean()
 nan_check1 = nan_check1[nan_check1 > .9].sort_values()
 nan_check1
 
-nan_check2 = rej_df.isna().mean()
-nan_check2 = nan_check2[nan_check2 > .9].sort_values()
-nan_check2
 #dropping na columns with all na values
 acc_df = acc_df.drop(['desc','member_id'], axis=1, errors='ignore')
 rej_df = acc_df.drop(['desc','member_id'], axis=1, errors='ignore')
@@ -35,9 +30,20 @@ acc_df['Year'] = pd.DatetimeIndex(acc_df['issue_d']).year
 acc_df.loc[acc_df['loan_status'] == ('Does not meet the credit policy. Status:Charged Off'), 'loan_status'] = 'Charged Off'
 acc_df.loc[acc_df['loan_status'] == ('Does not meet the credit policy. Status:Fully Paid'),'loan_status'] = 'Fully Paid'
 
+#creating fico range into one variable
+acc_df['fico_range'] = (acc_df['fico_range_high'] + acc_df['fico_range_low'])/2
+acc_df['fico_range']
+
+#creating a mask of the dataframe without the current loans
+loan_mask = acc_df[acc_df['loan_status'] != 'Current']
+#creating a mask of data frame with only current loans
+curr_loan_mask = acc_df[acc_df['loan_status'] == 'Current']
+
 #graphing funded amount over the years
 acc_df.groupby(['Year'])['funded_amnt'].agg(['mean']).plot.line()
-avg_fnd = sns.lineplot(data = acc_df, x='Year', y='funded_amnt', estimator=np.mean).set(xlabel ="Year", ylabel ="Funded Amount", title="Loan Amount Over the Years")
+avg_fnd = sns.lineplot(data = acc_df, x='Year', y='funded_amnt', estimator=np.mean).set(xlabel ="Year", ylabel ="Funded Amount", title="Loan Funded Amount Over the Years")
+sns.lineplot(data = acc_df, x='Year', y='profit', estimator=np.mean).set(xlabel ="Year", ylabel ="Profit", title="Loan Profit Amount Over the Years")
+
 #amt of money for specific grades in purpose ? ------------------------------------------------------
 #looking purpose counts over the years
 acc_df.groupby(['Year','purpose'])['funded_amnt'].agg(['count']).reset_index().pivot(index='Year',columns = 'purpose', values = 'count').plot()
@@ -61,13 +67,17 @@ acc_df[acc_df['term'] == ' 60 months'].groupby(['grade'])['int_rate'].agg(['mean
 acc_df[acc_df['term'] == ' 36 months'].groupby(['grade'])['int_rate'].agg(['mean','std'])
 
 #showing grade by interest rate
-non_current_mask.groupby('grade')['int_rate'].mean()
+acc_df.groupby('grade')['fico_range'].agg(['mean'])
+#bar plot of average funds 
+sns.lineplot(data=loan_mask,x='grade',y='funded_amnt')
 
+#looking at loan status of funded amount within grades of defaulted vs paid off or currently paying
+defaulted_bar = acc_df[acc_df['loan_status'].isin(['Does not meet the credit policy. Status:Charged Off', 'Charged Off', 'Default'])].groupby('grade')['int_rate'].agg(['count'])
+defaulted_bar.plot.bar(xlabel="Grade",ylabel="Count",title='Count of Defaulted Borrowers')
 
-
-
-
-
+#showing a bar graph of non_defaulted borrowers count
+non_defaulted_bar = acc_df[acc_df['loan_status'].isin(['Fully Paid', 'Does not meet the credit policy. Status:Fully Paid'])].groupby('grade')['int_rate'].agg(['count'])
+non_defaulted_bar.plot.bar(xlabel="Grade",ylabel="Count",title='Count of Non-Defaulted Borrowers')
 
 #looking purpose counts over the years
 acc_df.groupby(['Year','purpose'])['funded_amnt'].agg(['count']).reset_index().pivot(index='Year',columns = 'purpose', values = 'count').plot()
@@ -118,16 +128,9 @@ non_defaulted_bar = acc_df[acc_df['loan_status'].isin(['Fully Paid', 'Does not m
 non_defaulted_bar.plot.bar(xlabel="Grade",ylabel="Count",title='Count of Non-Defaulted Borrowers')
 
 
-#creating variables of paid loans
-paid_grade_stat = acc_df[acc_df['loan_status'].isin(['Fully Paid', 'Current', 'Does not meet the credit policy. Status:Fully Paid'])].groupby('grade').size()
-#calculated percentage of paid loans and graphed it
-paid_grade_perc = (paid_grade_stat/status_sum)*100
-paid_grade_perc.plot.line()
-
 #creating a variable for profit of each row 
 acc_df.groupby('grade')['total_pymnt'].agg(['mean'])
 acc_df['profit'] = acc_df['total_pymnt'] - acc_df['funded_amnt']
-acc_df['profit_perc'] = (acc_df['total_pymnt'] - acc_df['funded_amnt'])/acc_df['funded_amnt']
 #graphing the profit by Year and grade
 acc_df.groupby(['Year','grade'])['profit'].agg(['mean']).reset_index().pivot(index='Year',columns = 'grade', values = 'mean').plot()
 
@@ -163,19 +166,13 @@ acc_df[acc_df['loan_status'] != 'Current'].groupby(['Year','term'])['profit'].ag
 #looking into profit by grade over the years of loans that are not currently paying back
 acc_df[acc_df['loan_status'].isin(['Default','Charged Off','Fully Paid'])].groupby(['Year','grade'])['profit'].agg(['mean']).reset_index().pivot(index='Year',columns = 'grade', values = 'mean').plot()
 
-#creating a mask of the dataframe without the current loans
-loan_mask = acc_df[acc_df['loan_status'] != 'Current']
-
-curr_loan_mask = acc_df[acc_df['loan_status'] == 'Current']
 sns.lineplot(data=curr_loan_mask, x='Year',y='funded_amnt')
 #count plot of the count of purpose loans
 sns.countplot(data=acc_df, y='purpose').set(xlabel ="Count", ylabel = "Purpose of Loan",title='Purpose of Loan Count')
-#bar plot of average funds 
-sns.lineplot(data=loan_mask,x='grade',y='funded_amnt')
 
 acc_df[acc_df['loan_status'] != 'Current'].groupby(['Year','grade'])['profit'].agg(['mean']).reset_index().pivot(index='Year',columns = 'grade', values = 'mean').plot()
 
-sns.lineplot(data=loan_mask,x='fico_range_low',y='profit')
+sns.lineplot(data=loan_mask,x='grade',y='profit')
 
 purpose_mask = acc_df.loc[acc_df['purpose'].isin(['credit_card','debt_consolidation','home_improvement','other'])]
 purpose_mask
